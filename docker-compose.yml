@@ -1,0 +1,51 @@
+version: '3.3'
+services:
+    redis:
+        image: 'redis:alpine'
+        networks:
+            - application
+
+    mysql:
+        image: 'mysql:8.0'
+        container_name: mysql
+        working_dir: /application
+        networks:
+            - application
+        volumes:
+            - '.:/application'
+        environment:
+            - MYSQL_ROOT_PASSWORD=edi
+            - MYSQL_DATABASE=agenda
+            - MYSQL_USER=edi
+            - MYSQL_PASSWORD=edi
+        ports:
+            - '3306:3306'
+
+    webserver:
+        image: 'nginx:alpine'
+        working_dir: /applicationx
+        networks:
+            - application
+        volumes:
+            - '.:/application'
+            - './phpdocker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf'
+        ports:
+            - '80:80'
+
+    php-fpm:
+        build: phpdocker/php-fpm
+        working_dir: /application
+        tty: true
+        links:
+            - mysql
+        networks:
+            - application
+        volumes:
+            - '.:/application'
+            - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/7.4/fpm/conf.d/99-overrides.ini'
+
+networks:
+    application:
+        driver: bridge
+    volumes:
+    esdata: null
